@@ -16,8 +16,9 @@ def go(user_code, real_filename):
     filename = str(uuid.uuid4())
     with open('/home/joan/code/{}.py'.format(filename), 'w') as f:
         f.write(user_code)
-    user_p = subprocess.run(['/usr/local/bin/python3', '/home/joan/code/{}.py'.format(filename)], capture_output=True, timeout=10)
+    user_p = subprocess.run(['/usr/bin/python3', '/home/joan/code/{}.py'.format(filename)], capture_output=True, timeout=10)
     return str(user_p.stdout.decode()), str(user_p.stderr.decode()).replace('{}.py'.format(filename), real_filename)
 
-if __name__ == '__main__':
-	go('print("works!")', 'testcode.py')
+out, err = go('print("works!")', 'testcode.py')
+print(out)
+print(err)
