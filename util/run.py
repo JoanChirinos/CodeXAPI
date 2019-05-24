@@ -14,7 +14,7 @@ def go(user_code, real_filename):
     if unsafe:
         return 'Unsafe code! I can\'t run that!'
     filename = str(uuid.uuid4())
-    with open('{}.py'.format(filename), 'w') as f:
+    with open('/home/joan/code/{}.py'.format(filename), 'w') as f:
         f.write(user_code)
-    user_p = subprocess.run(['/usr/local/bin/python3', '{}.py'.format(filename)], capture_output=True, timeout=10)
+    user_p = subprocess.run(['/usr/local/bin/python3', '/home/joan/code/{}.py'.format(filename)], capture_output=True, timeout=10)
     return str(user_p.stdout.decode()), str(user_p.stderr.decode()).replace('{}.py'.format(filename), real_filename)
