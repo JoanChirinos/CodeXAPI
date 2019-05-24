@@ -16,9 +16,18 @@ def go(user_code, real_filename):
     filename = str(uuid.uuid4())
     with open('/home/joan/code/{}.py'.format(filename), 'w') as f:
         f.write(user_code)
-    user_p = subprocess.run(['/usr/bin/python3', '/home/joan/code/{}.py'.format(filename)], capture_output=True, timeout=10)
-    return str(user_p.stdout.decode()), str(user_p.stderr.decode()).replace('{}.py'.format(filename), real_filename)
+    my_stdout = open('{}_stdout.txt', 'w')
+    my_stderr = open('{}_stderr.txt', 'w')
+    user_p = subprocess.run(['/usr/bin/python3', '/home/joan/code/{}.py'.format(filename)], stdout=my_stdout, stderr=my_stderr, timeout=10)
+    my_stdout.close()
+    my_stderr.close()
+    with open('{}_stdout.txt') as f:
+        my_stdout = f.read()
+    with open('{}_stderr.txt') as f:
+        my_stderr = f.read()
+    
+    return str(my_stdout), str(my_stderr).replace('{}.py'.format(filename), real_filename)
 
-out, err = go('print("works!")', 'testcode.py')
-print(out)
-print(err)
+##out, err = go('print("works!")', 'testcode.py')
+##print(out)
+##print(err)
