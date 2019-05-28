@@ -25,7 +25,7 @@ def go(user_code, real_filename):
         my_stdout = f.read()
     with open('/var/www/XAPI/XAPI/util/{}_stderr.txt') as f:
         my_stderr = f.read()
-    
+
     return str(my_stdout), str(my_stderr).replace('{}.py'.format(filename), real_filename)
 
 ##out, err = go('print("works!")', 'testcode.py')
