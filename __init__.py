@@ -32,4 +32,4 @@ def run_file():
 
 if __name__ == '__main__':
     app.debug = True
-    app.run(host='68.183.124.39')
+    app.run(host='159.65.162.204')
