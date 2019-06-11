@@ -1,4 +1,6 @@
-#! /usr/bin/python3
+#! /usr/bin/python3.7
+
+import sys
 
 from flask import Flask, jsonify, render_template, request
 
@@ -10,7 +12,7 @@ app.secret_key = 'beans'
 
 @app.route('/')
 def home():
-    return "There's nothing here!"
+    return 'version : {}'.format(sys.version)
 
 
 @app.route('/test')
