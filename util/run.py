@@ -10,7 +10,7 @@ def code_is_unsafe(code):
         for keyword in keywords:
             if keyword in lines[line_number]:
                 return True, keyword, line_number + 1
-    return False, None
+    return False, None, None
 
 
 def go(user_code, real_filename):
