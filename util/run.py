@@ -23,14 +23,18 @@ def go(user_code, real_filename):
         f.write(user_code)
 
     p = Popen(['sudo', '/usr/bin/python3', '/var/www/XAPI/XAPI/util/{}.py'.format(filename)], stdout=PIPE, stderr=PIPE)
-    print(p.pid)
+    pid = p.pid
     for t in range(50):
         sleep(0.1)
         if p.poll() is not None:
             stdout, stderr = p.communicate()
             return str(stdout), str(stderr).replace('{}.py'.format(filename), real_filename)
-    p.kill()
-    return '# Timeout error (~5 seconds).\n# Are you using too much recursion?\n# Please run this code on your own machine', False
+    try:
+        Popen(['sudo', 'kill', str(pid)])
+    except:
+        pass
+    finally:
+        return '# Timeout error (~5 seconds).\n# Are you using too much recursion?\n# Please run this code on your own machine', False
 
 ##def go(user_code, real_filename):
 ##    unsafe, keyword = code_is_unsafe(user_code)
