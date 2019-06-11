@@ -16,7 +16,7 @@ def code_is_unsafe(code):
 def go(user_code, real_filename):
     unsafe, keyword, line_number = code_is_unsafe(user_code)
     if unsafe:
-        return '# Unsafe code on line {}: {}'.format(line_number, keyword), False
+        return '', '# Unsafe code on line {}: {}'.format(line_number, keyword)
     filename = str(uuid4())
 
     with open('/var/www/XAPI/XAPI/util/{}.py'.format(filename), 'w') as f:
@@ -28,13 +28,15 @@ def go(user_code, real_filename):
         sleep(0.1)
         if p.poll() is not None:
             stdout, stderr = p.communicate()
-            return str(stdout), str(stderr).replace('{}.py'.format(filename), real_filename)
+            stdout = stdout.decode()
+            stderr = stderr.decode()
+            return stdout, stderr.replace('/var/www/XAPI/XAPI/util/{}.py'.format(filename), real_filename)
     try:
         Popen(['sudo', 'kill', str(pid)])
     except:
         pass
     finally:
-        return '# Timeout error (~5 seconds).\n# Are you using too much recursion?\n# Please run this code on your own machine', False
+        return '', '# Timeout error (~5 seconds).\n# Are you using too much recursion?\n# Please run this code on your own machine'
 
 ##def go(user_code, real_filename):
 ##    unsafe, keyword = code_is_unsafe(user_code)
