@@ -23,6 +23,7 @@ def go(user_code, real_filename):
         f.write(user_code)
 
     p = Popen(['sudo', '/usr/bin/python3', '/var/www/XAPI/XAPI/util/{}.py'.format(filename)], stdout=PIPE, stderr=PIPE)
+    print(p.pid)
     for t in range(50):
         sleep(0.1)
         if p.poll() is not None:
