@@ -8,7 +8,7 @@ def code_is_unsafe(code):
     lines = code.split('\n')
     for line_number in range(len(lines)):
         for keyword in keywords:
-            if keyword in line:
+            if keyword in lines[line_number]:
                 return True, keyword, line_number + 1
     return False, None
 
