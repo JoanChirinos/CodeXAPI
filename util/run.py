@@ -2,21 +2,40 @@ from subprocess import Popen, PIPE
 from time import sleep
 from uuid import uuid4
 from os import remove
+import re
 
-def code_is_unsafe(code):
-    keywords = ['import', 'exec', 'eval', 'compile', 'open', 'input', '__import__', 'user_outputs', 'correct_outputs', 'file', 'execfile', 'stdin', '__builtins__', 'globals', 'locals']
+SAFE_IMPORTS = {'math', 'string', 're', 'difflib', 'textwrap', 'stringprep', 'datetime',
+                'calendar', 'deque', 'ChainMap', 'Counter', 'OrderedDict', 'UserDict',
+                'UserList', 'UserString', 'heapq', 'bisect', 'array', 'copy', 'pprint', '',
+                'enum', 'cmath', 'decimal', 'fractions', 'random', 'statistics', 'itertools',
+                'functools', 'operator', 'hashlib', 'hmac', 'secrets', 'time', 'json', 're',
+                'base64', 'binascii', 'html', 'html.parser', 'html.entites', 'colorsys', 'uuid'}
+UNSAFE_KEYWORDS = {'exec', 'eval', 'compile', 'open', 'input', '__import__', 'stdin', 'stdout',
+                   'stderr' '__builtins__', 'globals', 'locals', '.read', '.write'}
+
+def code_is_safe(code):
+    # check imports
+    import_from = re.compile(r'^[ \t]*from[ \t]+([\w.]+)[ \t]+import[ \t][\w, \t.]+\s*$', re.M)
+    import_any = re.compile(r'^[ \t]*import[ \t]+[\w, \t.]+$', re.M)
+    imports = import_from.findall(code) + [item for sublist in [[b.strip() for b in i] for i in [x[x.find('import')+6:].split(',') for x in import_any.findall(code)]] for item in sublist]
+    for i in imports:
+        if i not in SAFE_IMPORTS:
+            return False, '# Unsafe import: {}'.format(i)
+
+    #check other stuff
     lines = code.split('\n')
     for line_number in range(len(lines)):
-        for keyword in keywords:
+        for keyword in UNSAFE_KEYWORDS:
             if keyword in lines[line_number]:
-                return True, keyword, line_number + 1
-    return False, None, None
+                before, after = lines[lines_number]
+                return False, '# Unsafe code on line {}: {}'.format(line_number, keyword)
+    return True, None
 
 
 def go(user_code, real_filename):
-    unsafe, keyword, line_number = code_is_unsafe(user_code)
-    if unsafe:
-        return '', '# Unsafe code on line {}: {}'.format(line_number, keyword)
+    safe, message = code_is_safe(user_code)
+    if not safe:
+        return '', message
     filename = str(uuid4())
 
     with open('/var/www/XAPI/XAPI/util/{}.py'.format(filename), 'w') as f:
@@ -30,39 +49,16 @@ def go(user_code, real_filename):
             stdout, stderr = p.communicate()
             stdout = stdout.decode()
             stderr = stderr.decode()
-            return stdout, stderr.replace('/var/www/XAPI/XAPI/util/{}.py'.format(filename), real_filename)
+            try:
+                Popen(['sudo', 'rm', '{}.py'.format(filename)])
+            except:
+                pass
+            finally:
+                return stdout, stderr.replace('/var/www/XAPI/XAPI/util/{}.py'.format(filename), real_filename)
     try:
+        Popen(['sudo', 'rm', '{}.py'.format(filename)])
         Popen(['sudo', 'kill', str(pid)])
     except:
         pass
     finally:
         return '', '# Timeout error (~5 seconds).\n# Are you using too much recursion?\n# Please run this code on your own machine'
-
-##def go(user_code, real_filename):
-##    unsafe, keyword = code_is_unsafe(user_code)
-##    if unsafe:
-##        return '#Unsafe code! I can\'t run that!', False
-##    filename = str(uuid.uuid4())
-##    with open('/var/www/XAPI/XAPI/util/{}.py'.format(filename), 'w') as f:
-##        f.write(user_code)
-##    my_stdout = open('/var/www/XAPI/XAPI/util/{}_stdout.txt'.format(filename), 'w')
-##    my_stderr = open('/var/www/XAPI/XAPI/util/{}_stderr.txt'.format(filename), 'w')
-##    user_p = subprocess.run(['sudo', '/usr/bin/python3', '/var/www/XAPI/XAPI/util/{}.py'.format(filename)], stdout=my_stdout, stderr=my_stderr, timeout=1)
-##    try:
-##        user_p.wait()
-##    except:
-##        pass
-##    my_stdout.close()
-##    my_stderr.close()
-##    with open('/var/www/XAPI/XAPI/util/{}_stdout.txt'.format(filename)) as f:
-##        my_stdout = f.read()
-##    with open('/var/www/XAPI/XAPI/util/{}_stderr.txt'.format(filename)) as f:
-##        my_stderr = f.read()
-##    os.remove('/var/www/XAPI/XAPI/util/{}_stderr.txt'.format(filename))
-##    os.remove('/var/www/XAPI/XAPI/util/{}_stdout.txt'.format(filename))
-##    os.remove('/var/www/XAPI/XAPI/util/{}.py'.format(filename))
-##    return str(my_stdout), str(my_stderr).replace('{}.py'.format(filename), real_filename)
-
-##out, err = go('print("works!")', 'testcode.py')
-##print(out)
-##print(err)
